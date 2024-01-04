@@ -23,9 +23,10 @@ WORKDIR /app
 # Install app dependencies
 RUN npm install
 
-# Binds to port 3000
+# Binds to PORT 3000
 EXPOSE  3000
 
 #  Defines your runtime(define default command)
-# These commands unlike RUN (they are carried out in the construction of the container) are run when the container
+#  These commands unlike RUN (they are carried out in the construction of the container) are run when the container
+
 CMD ["node", "app.js"]

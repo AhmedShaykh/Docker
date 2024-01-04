@@ -13,7 +13,8 @@ RUN npm install
 # RUN npm ci --only=production
 
 # Bundle app source
-COPY . .
+COPY .....
 
+#### ========== PORT ========== ####
 EXPOSE 8080
 CMD [ "npm", "start" ]
