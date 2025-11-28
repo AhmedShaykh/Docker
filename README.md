@@ -1,1 +1,1 @@
-# Application Deploy In Docker!
+# Applications Deploy In Docker!
