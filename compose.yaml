@@ -1,0 +1,95 @@
+version: "3.9"
+
+services:
+
+  mongo:
+    image: "mongo:latest"
+    container_name: mongo_local
+    restart: always
+    ports:
+      - "27017:27017"
+    environment:
+      MONGO_INIT_DB_ROOT_USERNAME: admin
+      MONGO_INIT_DB_ROOT_PASSWORD: admin123
+      MONGO_INIT_DB_DATABASE: myapp
+    volumes:
+      - "mongo_data:/data/db"
+    networks:
+      - app-network
+
+  mongo-express:
+    image: "mongo-express:latest"
+    container_name: mongo-express
+    restart: unless-stopped
+    ports:
+      - "8081:8081"
+    environment:
+      ME_CONFIG_MONGODB_SERVER: mongo
+      ME_CONFIG_MONGODB_ADMINUSERNAME: admin
+      ME_CONFIG_MONGODB_ADMINPASSWORD: admin123
+      ME_CONFIG_MONGODB_AUTH_DATABASE: admin
+      ME_CONFIG_BASICAUTH_USERNAME: admin
+      ME_CONFIG_BASICAUTH_PASSWORD: admin123
+    depends_on:
+      - mongo
+    networks:
+      - app-network
+
+  nestjs-app:
+    image: "node:20-alpine"
+    container_name: nestjs-app
+    working_dir: /app
+    ports:
+      - "3000:3000"
+    volumes:
+      - "./nestjs-app:/app"
+    environment:
+      MONGODB_URI: mongodb://admin:admin123@mongo:27017/myapp?authSource=admin
+      POSTGRES_PRISMA_URL: postgres://user:password@ep-your-project.us-east-2.aws.neon.tech/neondb?sslmode=require
+      DATABASE_URL: "${POSTGRES_PRISMA_URL}"
+    command: |
+      sh -c "
+        npm install &&
+        npx prisma generate &&
+        npm run start:dev
+      "
+    depends_on:
+      - mongo
+    networks:
+      - app-network
+
+  prisma-studio:
+    image: "node:20-alpine"
+    container_name: prisma-studio
+    working_dir: /app
+    ports:
+      - "5555:5555"
+    volumes:
+      - "./nestjs-app:/app"
+    environment:
+      DATABASE_URL: "${POSTGRES_PRISMA_URL}"
+    command: npx prisma studio
+    networks:
+      - app-network
+
+  pgadmin:
+    image: "dpage/pgadmin4:latest"
+    container_name: pgadmin
+    restart: unless-stopped
+    ports:
+      - "5050:80"
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@admin.com
+      PGADMIN_DEFAULT_PASSWORD: supersecret123
+    volumes:
+      - "pgadmin_data:/var/lib/pgadmin"
+    networks:
+      - app-network
+
+networks:
+  app-network:
+    driver: bridge
+    
+volumes:
+  mongo_data: null
+  pgadmin_data: null
